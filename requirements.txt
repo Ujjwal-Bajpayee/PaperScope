@@ -1,0 +1,5 @@
+streamlit
+arxiv
+google-generativeai
+PyMuPDF
+faiss-cpu
