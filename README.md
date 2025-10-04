@@ -105,7 +105,7 @@ conda install -c conda-forge faiss-cpu
 ## 🔒 Security and costs
 
 - Using Google Gemini / other generative APIs may incur costs. Monitor usage in your cloud console and set appropriate limits/alerts.
-- Never commit `paperscope/config.py` with real keys to a public repository. Add it to `.gitignore` if you plan to keep it in the project root.
+- Never commit `paperscope/config.py` with real keys to a public repository. This file is already included in the project's `.gitignore`, so you do not need to add it yourself.
 
 ## Community & Code of Conduct
 
