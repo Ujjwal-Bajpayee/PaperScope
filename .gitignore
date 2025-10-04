@@ -1,0 +1,17 @@
+# Virtual environment
+.venv/
+
+# Local database and indexes
+db.json
+faiss.index
+meta.json
+
+# Temporary uploaded PDFs
+temp.pdf
+
+# Configuration containing secrets
+paperscope/config.py
+
+# Python cache
+__pycache__/
+*.pyc
