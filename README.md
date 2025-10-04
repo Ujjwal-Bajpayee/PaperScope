@@ -107,6 +107,30 @@ conda install -c conda-forge faiss-cpu
 - Using Google Gemini / other generative APIs may incur costs. Monitor usage in your cloud console and set appropriate limits/alerts.
 - Never commit `paperscope/config.py` with real keys to a public repository. This file is already included in the project's `.gitignore`, so you do not need to add it yourself.
 
+## 🧪 Demo Mode
+
+PaperScope supports a lightweight Demo Mode so reviewers and curious users can try the app without providing a Gemini API key.
+
+- Enable Demo Mode by setting the environment variable `DEMO_MODE=1` (or `true`/`yes`) before starting the app. Example:
+
+```bash
+DEMO_MODE=1 streamlit run streamlit_app.py
+```
+
+- Demo Mode does not call external generative APIs. Instead, the app returns simplified extractive summaries and deterministic embeddings so the core UI and search flows can be explored offline.
+- A banner appears in the UI when Demo Mode is active and some features may be simplified or show the `[DEMO MODE]` prefix in results.
+- Demo Mode is intended for evaluation and demos only. For production use or higher-quality summaries, unset `DEMO_MODE` and add a valid `paperscope/config.py` with your Gemini credentials.
+
+### Demo checks
+
+A small verification script is provided to assert demo mode works without external APIs:
+
+```bash
+DEMO_MODE=1 python3 scripts/demo_mode_check.py
+```
+
+This script saves a sample summary, builds the FAISS index (using local embeddings) and runs a semantic search to confirm the flow works offline.
+
 ## Community & Code of Conduct
 
 PaperScope is developed in an open and collaborative spirit. Please read and follow the project's Code of Conduct before contributing or participating. The full policy is available in `CODE_OF_CONDUCT.md`.
