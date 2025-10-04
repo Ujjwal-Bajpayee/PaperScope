@@ -1,35 +1,42 @@
-# 📚 PaperScope – Your AI Research Assistant
+# 📚 PaperScope – Your AI-Powered Research Assistant
 
-PaperScope is a smart research assistant powered by Gemini, FAISS, and Streamlit. It helps you discover, summarize, and search academic papers quickly and effectively.
+**PaperScope** is an intelligent research assistant that helps you discover, summarize, and search academic papers efficiently.  
+Built with **Gemini**, **FAISS**, and **Streamlit**, it transforms how you interact with research — making exploration faster, smarter, and more insightful. 🧠✨
 
 ---
 
-## 🔧 Features
+## 🚀 Overview
+
+PaperScope empowers researchers, students, and enthusiasts to:
+- 🔍 **Search** papers from **arXiv** instantly by topic or keyword.  
+- 🧾 **Summarize** academic papers using **Gemini AI**.  
+- 📄 **Upload PDFs** and generate concise summaries.  
+- 🔎 **Perform semantic search** using **FAISS** to find contextually similar papers.  
+
+---
+
+## 🧩 Features
 
 ### 🔍 Search arXiv Papers
-Search recent academic papers by keyword and generate concise summaries using Gemini AI.
+Easily search for recent papers and get concise, AI-generated summaries powered by Gemini.
 
 ### 🧠 Query Stored Summaries
-Find relevant saved summaries using fast keyword search.
+Retrieve relevant summaries from your saved data using keyword or semantic search.
 
-### 📄 Upload & Summarize PDF
-Upload a PDF and instantly generate a research summary using Gemini.
+### 📄 Upload & Summarize PDFs
+Upload your own research paper or document — PaperScope summarizes it in seconds.
 
 ### 🔎 Semantic Search (FAISS)
-Use semantic (vector-based) search to find papers with similar meanings—not just keyword matches.
+Find papers with similar meanings, not just matching keywords, using FAISS-based vector search.
 
+---
 
+## 🛠️ Tech Stack
 
-
-# 📦 Tech Stack
-Streamlit
-
-arXiv API
-
-Google Generative AI (Gemini)
-
-FAISS for semantic search
-
-PyMuPDF for PDF parsing
-
-
+| Component | Purpose |
+|------------|----------|
+| **Streamlit** | Interactive user interface |
+| **arXiv API** | Academic paper data source |
+| **Google Gemini** | AI model for summaries & insights |
+| **FAISS** | Vector-based semantic search |
+| **PyMuPDF** | PDF parsing and text extraction |
