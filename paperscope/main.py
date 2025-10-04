@@ -1,11 +1,19 @@
 from paperscope.arxiv_client import search_papers
-from paperscope.summarizer import summarize
+import os
+
 from paperscope.storage import add_entry, load_db
 
 def fetch_and_summarize(keywords):
     """
     Search arXiv papers by keyword, summarize abstracts, and store results.
     """
+    # Choose summarizer implementation at call time to avoid importing
+    # heavy external clients during module import (prevents credential errors)
+    if os.getenv("DEMO_MODE", "").lower() in ("1", "true", "yes"):
+        from paperscope.summarizer_demo import summarize
+    else:
+        from paperscope.summarizer import summarize
+
     results = search_papers(keywords, max_results=5)
     for pid, title, abstract in results:
         summary = summarize(abstract)
