@@ -14,7 +14,7 @@ Built with **Gemini**, **FAISS**, and **Streamlit**, it transforms how you inter
 ## 🚀 Overview
 
 PaperScope empowers researchers, students, and enthusiasts to:
-- 🔍 **Search** papers from **arXiv** instantly by topic or keyword.  
+- 🔍 **Search** papers from **arXiv** instantly by topic, keyword, or direct URL.  
 - 🧾 **Summarize** academic papers using **Gemini AI**.  
 - 📄 **Upload PDFs** and generate concise summaries.  
 - 🔎 **Perform semantic search** using **FAISS** to find contextually similar papers.  
@@ -24,7 +24,12 @@ PaperScope empowers researchers, students, and enthusiasts to:
 ## 🧩 Features
 
 ### 🔍 Search arXiv Papers
-Easily search for recent papers and get concise, AI-generated summaries powered by Gemini.
+Easily search for recent papers by keywords or provide direct paper URLs (arXiv links or PDF URLs). Get concise, AI-generated summaries powered by Gemini.
+
+**Supported input formats:**
+- Keywords: `"reinforcement learning robots"`
+- arXiv URLs: `https://arxiv.org/abs/2301.12345` or `https://arxiv.org/pdf/2301.12345.pdf`
+- Direct PDF URLs: `https://example.com/paper.pdf`
 
 ### 🧠 Query Stored Summaries
 Retrieve relevant summaries from your saved data using keyword or semantic search.

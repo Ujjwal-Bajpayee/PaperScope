@@ -3,3 +3,4 @@ arxiv
 google-generativeai
 PyMuPDF
 faiss-cpu
+requests

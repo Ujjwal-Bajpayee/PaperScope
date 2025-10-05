@@ -86,22 +86,41 @@ st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
 # ===== 🔍 Search arXiv Papers =====
 if option == "🔍 Search arXiv Papers":
-    keyword_input = st.text_input("Enter Keywords", placeholder="e.g., reinforcement learning for robots")
+    keyword_input = st.text_input("Enter Keywords or Paper URL", placeholder="e.g., reinforcement learning for robots OR https://arxiv.org/abs/2301.12345")
+    st.caption("💡 You can enter keywords to search arXiv, or paste a direct paper URL (arXiv or PDF link)")
 
     if st.button("🔎 Fetch & Summarize"):
         if DEMO_MODE:
             st.info("This feature is disabled in Demo Mode. Use demo dataset or upload a PDF instead.")
         elif keyword_input:
-            with st.spinner("Fetching and summarizing..."):
-                data = fetch_and_summarize(keyword_input)
-                if data:
-                    for item in data[-5:]:
-                        with st.expander(f"📄 {item['title']}"):
-                            st.write(item['summary'])
-                else:
-                    st.warning("No results found.")
+            from paperscope.url_handler import is_url
+            
+            if is_url(keyword_input):
+                with st.spinner("Fetching paper from URL and summarizing..."):
+                    try:
+                        data = fetch_and_summarize(keyword_input)
+                        if data:
+                            for item in data[-5:]:
+                                with st.expander(f"📄 {item['title']}"):
+                                    st.write(item['summary'])
+                            st.success("✅ Paper fetched and summarized successfully!")
+                        else:
+                            st.error("❌ Failed to fetch paper from URL. Please check the URL and try again.")
+                            st.info("Supported formats: arXiv URLs (abs or pdf) and direct PDF links")
+                    except Exception as e:
+                        st.error(f"❌ Error processing URL: {str(e)}")
+                        st.info("Supported formats: arXiv URLs (abs or pdf) and direct PDF links")
+            else:
+                with st.spinner("Fetching and summarizing..."):
+                    data = fetch_and_summarize(keyword_input)
+                    if data:
+                        for item in data[-5:]:
+                            with st.expander(f"📄 {item['title']}"):
+                                st.write(item['summary'])
+                    else:
+                        st.warning("No results found.")
         else:
-            st.warning("Please enter a keyword to search.")
+            st.warning("Please enter a keyword or URL to search.")
 
 # ===== 🧠 Query Stored Summaries =====
 elif option == "🧠 Query Stored Summaries":
