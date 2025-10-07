@@ -5,14 +5,24 @@ import os
 from paperscope.summarizer import summarize
 from paperscope.storage import load_db, save_db
 from paperscope.config import DB_PATH
+from sentence_transformers import SentenceTransformer
 
 VECTOR_INDEX_PATH = "faiss.index"
 VECTOR_DIM = 768  
 
 
 def embed_text(text):
-    np.random.seed(abs(hash(text)) % (2**32))
-    return np.random.rand(VECTOR_DIM).astype("float32")
+    """
+    Returns a text embedding.
+    Uses real model if available, otherwise falls back to a mock embedding.
+    """
+    try:
+        model = SentenceTransformer('all-MiniLM-L6-v2')
+        return model.encode(text).astype("float32")
+    except:
+        np.random.seed(abs(hash(text)) % (2**32))
+        return np.random.rand(VECTOR_DIM).astype("float32")
+
 
 def build_index():
     """
@@ -46,3 +56,4 @@ def search_similar(text, k=5):
     with open("meta.json") as f:
         metadata = json.load(f)
     return [metadata[i] for i in I[0] if i < len(metadata)]
+

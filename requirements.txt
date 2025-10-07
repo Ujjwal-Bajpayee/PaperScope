@@ -4,3 +4,4 @@ google-generativeai
 PyMuPDF
 faiss-cpu
 requests
+sentence-transformers
