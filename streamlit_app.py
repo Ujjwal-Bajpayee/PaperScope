@@ -76,8 +76,9 @@ with st.sidebar:
 
         if st.button("🎯 Load Demo Dataset"):
             from paperscope.demo_data import load_demo_data
-            ok, msg = load_demo_data(build_index=False)
-            st.success(msg) if ok else st.error(msg)
+            ok = load_demo_data(build_index=False)
+            msg = "Demo DB created" if ok else "Failed to load Demo DB"
+            _= st.success(msg) if ok else st.error(msg)
 
 # ===== 🧠 Main Header & Description =====
 st.markdown('<div class="main-title">📚 PaperScope – Your AI Research Assistant</div>', unsafe_allow_html=True)

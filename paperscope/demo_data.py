@@ -50,4 +50,4 @@ def load_demo_data(build_index: bool = False) -> Tuple[bool, str]:
             # Index build failed or faiss missing; still OK for demo but warn
             return True, f"Demo DB created; FAISS index build skipped/failed: {e}"
 
-    return True, "Demo DB created."
+    return True
