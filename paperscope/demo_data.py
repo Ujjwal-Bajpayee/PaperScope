@@ -10,7 +10,7 @@ def load_demo_data(build_index: bool = False) -> tuple[bool,str]:
     """Create a small demo database and metadata file.
 
     If build_index is True, attempt to call the repository's build_index function.
-    Returns True.
+    Returns (success, message).
     """
     sample = [
         {
