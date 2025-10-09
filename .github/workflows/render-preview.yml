@@ -47,26 +47,26 @@ jobs:
           curl -X POST "https://api.render.com/v1/services" \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{
-              "type": "web_service",
-              "name": "'$SERVICE_NAME'",
-              "ownerId": "${{ secrets.RENDER_OWNER_ID }}",
-              "repo": "https://github.com/${{ github.repository }}",
-              "branch": "${{ github.event.pull_request.head.ref }}",
-              "buildCommand": "pip install -r requirements.txt",
-              "startCommand": "streamlit run streamlit_app.py --server.port=$PORT --server.address=0.0.0.0",
-              "envVars": [
+            -d "{
+              \"type\": \"web_service\",
+              \"name\": \"$SERVICE_NAME\",
+              \"ownerId\": \"${{ secrets.RENDER_OWNER_ID }}\",
+              \"repo\": \"https://github.com/${{ github.repository }}\",
+              \"branch\": \"${{ github.event.pull_request.head.ref }}\",
+              \"buildCommand\": \"pip install -r requirements.txt\",
+              \"startCommand\": \"streamlit run streamlit_app.py --server.port=\$PORT --server.address=0.0.0.0\",
+              \"envVars\": [
                 {
-                  "key": "DEMO_MODE",
-                  "value": "1"
+                  \"key\": \"DEMO_MODE\",
+                  \"value\": \"1\"
                 },
                 {
-                  "key": "PYTHON_VERSION",
-                  "value": "3.11"
+                  \"key\": \"PYTHON_VERSION\",
+                  \"value\": \"3.11\"
                 }
               ],
-              "autoDeploy": "yes"
-            }' || echo "Service might already exist"
+              \"autoDeploy\": \"yes\"
+            }" || echo "Service might already exist"
       
       - name: Comment on PR
         uses: actions/github-script@v7
