@@ -6,7 +6,7 @@ from paperscope.storage import save_db
 from paperscope.summarizer_demo import summarize
 
 
-def load_demo_data(build_index: bool = False) -> Tuple[bool, str]:
+def load_demo_data(build_index: bool = False) -> tuple[bool,str]:
     """Create a small demo database and metadata file.
 
     If build_index is True, attempt to call the repository's build_index function.
@@ -50,4 +50,4 @@ def load_demo_data(build_index: bool = False) -> Tuple[bool, str]:
             # Index build failed or faiss missing; still OK for demo but warn
             return True, f"Demo DB created; FAISS index build skipped/failed: {e}"
 
-    return True, "Demo DB created."
+    return True, "Demo DB created"
