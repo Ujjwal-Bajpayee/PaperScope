@@ -12,3 +12,13 @@ It aims to simplify the workflow for students, researchers, and professionals by
 We’re building this project together — and you can help us make it even better! 🚀
 
 
+
+## 🚀 PR Preview Deployments
+
+When you submit a pull request, our CI system automatically:
+- ✅ Validates your code and dependencies
+- 🐳 Builds a Docker image
+- 🧪 Tests the app in demo mode
+- 📝 Posts build status as a PR comment
+
+This helps maintainers and reviewers quickly verify that your changes work correctly. For more details, see [`.github/PREVIEW_DEPLOYMENTS.md`](.github/PREVIEW_DEPLOYMENTS.md).

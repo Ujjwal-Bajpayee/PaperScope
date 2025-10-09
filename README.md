@@ -136,6 +136,23 @@ DEMO_MODE=1 python3 scripts/demo_mode_check.py
 
 This script saves a sample summary, builds the FAISS index (using local embeddings) and runs a semantic search to confirm the flow works offline.
 
+## 🚀 PR Preview Deployments
+
+PaperScope includes automated CI workflows that build and validate the app for every pull request. When you open a PR:
+
+- ✅ Dependencies are validated
+- ✅ The app is tested in demo mode
+- ✅ A Docker image is built and tested
+- 📝 Build status is posted as a PR comment
+
+**Live preview deployments** are available when configured by maintainers. See [`.github/PREVIEW_DEPLOYMENTS.md`](.github/PREVIEW_DEPLOYMENTS.md) for setup instructions supporting:
+- Streamlit Community Cloud
+- Render.com (with render.yaml blueprint included)
+- Railway.app
+- Heroku
+
+This makes it easy for reviewers to test changes before merging!
+
 ## Community & Code of Conduct
 
 PaperScope is developed in an open and collaborative spirit. Please read and follow the project's Code of Conduct before contributing or participating. The full policy is available in `CODE_OF_CONDUCT.md`.
