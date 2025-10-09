@@ -83,7 +83,7 @@ jobs:
       # Alternative: Deploy to Railway (requires RAILWAY_TOKEN)
       - name: Deploy to Railway
         id: deploy-railway
-        if: env.RAILWAY_TOKEN != '' && env.STREAMLIT_CLOUD_TOKEN == ''
+        if: env.RAILWAY_TOKEN != '' && steps.deploy.outputs.preview_url == ''
         uses: bervProject/railway-deploy@main
         with:
           railway_token: ${{ secrets.RAILWAY_TOKEN }}
