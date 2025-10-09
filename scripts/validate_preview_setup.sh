@@ -123,11 +123,11 @@ echo ""
 # Test demo config creation
 echo "⚙️  Testing demo config creation..."
 mkdir -p paperscope
-cat > paperscope/config_test.py << 'TESTEOF'
+cat > paperscope/config_test.py << 'EOF'
 API_KEY = "demo_key"
 MODEL = "gemini-pro"
 DB_PATH = "db.json"
-TESTEOF
+EOF
 
 if [ -f "paperscope/config_test.py" ]; then
     echo -e "${GREEN}✓${NC} Demo config can be created"
