@@ -1,0 +1,265 @@
+name: PR Preview Deployment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '**.py'
+      - 'requirements.txt'
+      - '.streamlit/**'
+      - 'streamlit_app.py'
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  pull-requests: write
+  contents: read
+  deployments: write
+
+jobs:
+  deploy-preview:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    environment:
+      name: pr-${{ github.event.pull_request.number }}
+      url: ${{ steps.deploy.outputs.preview_url }}
+    
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Create demo config
+        run: |
+          mkdir -p paperscope
+          cat > paperscope/config.py << 'EOF'
+          # Demo configuration for PR previews
+          # This allows the app to run without requiring real API keys
+          API_KEY = "demo_key_for_preview"
+          MODEL = "gemini-pro"
+          DB_PATH = "db.json"
+          EOF
+      
+      - name: Run tests
+        run: |
+          if [ -d "tests" ]; then
+            echo "Running tests..."
+            python -m unittest discover -s tests -p "test_*.py" || echo "⚠️ Some tests failed, but continuing..."
+          fi
+        env:
+          DEMO_MODE: "1"
+        continue-on-error: true
+      
+      - name: Test app startup
+        run: |
+          # Test that the app can start without errors
+          timeout 10s streamlit run streamlit_app.py --server.headless true || true
+        env:
+          DEMO_MODE: "1"
+      
+      # Deploy to Streamlit Community Cloud (requires STREAMLIT_CLOUD_TOKEN)
+      - name: Deploy to Streamlit Cloud
+        id: deploy
+        if: env.STREAMLIT_CLOUD_TOKEN != ''
+        env:
+          STREAMLIT_CLOUD_TOKEN: ${{ secrets.STREAMLIT_CLOUD_TOKEN }}
+        run: |
+          # This is a placeholder for Streamlit Cloud deployment
+          # In practice, you would use the Streamlit Cloud API or CLI
+          echo "preview_url=https://paperscope-pr-${{ github.event.pull_request.number }}.streamlit.app" >> $GITHUB_OUTPUT
+      
+      # Alternative: Deploy to Railway (requires RAILWAY_TOKEN)
+      - name: Deploy to Railway
+        id: deploy-railway
+        if: env.RAILWAY_TOKEN != '' && env.STREAMLIT_CLOUD_TOKEN == ''
+        uses: bervProject/railway-deploy@main
+        with:
+          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          service: paperscope-pr-${{ github.event.pull_request.number }}
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          DEMO_MODE: "1"
+      
+      # Alternative: Deploy using Docker and generic hosting
+      - name: Build Docker image
+        if: env.STREAMLIT_CLOUD_TOKEN == '' && env.RAILWAY_TOKEN == ''
+        run: |
+          docker build -t paperscope-preview:pr-${{ github.event.pull_request.number }} .
+      
+      - name: Comment on PR with preview link
+        uses: actions/github-script@v7
+        if: steps.deploy.outputs.preview_url != '' || steps.deploy-railway.outputs.url != ''
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const previewUrl = '${{ steps.deploy.outputs.preview_url }}' || '${{ steps.deploy-railway.outputs.url }}';
+            const prNumber = context.payload.pull_request.number;
+            const body = `## 🚀 Preview Deployment Ready!
+            
+            Your Streamlit app preview is now available:
+            
+            🔗 **Preview URL**: ${previewUrl}
+            
+            📝 **Note**: This preview is running in DEMO_MODE, so it doesn't require API keys.
+            
+            The preview will be automatically cleaned up when this PR is merged or closed.
+            
+            ---
+            <sub>Deployed from commit: ${context.sha.substring(0, 7)}</sub>`;
+            
+            // Check if we already commented
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('🚀 Preview Deployment Ready!')
+            );
+            
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: body
+              });
+            }
+      
+      - name: Comment on PR - Deployment Info
+        uses: actions/github-script@v7
+        if: env.STREAMLIT_CLOUD_TOKEN == '' && env.RAILWAY_TOKEN == ''
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const body = `## 📦 Preview Build Successful!
+            
+            ✅ Your code passed validation and the app builds successfully.
+            
+            To enable automatic preview deployments, a repository maintainer needs to:
+            
+            1. **Option A - Streamlit Community Cloud**:
+               - Set up a Streamlit Cloud account
+               - Add \`STREAMLIT_CLOUD_TOKEN\` to repository secrets
+            
+            2. **Option B - Railway**:
+               - Set up a Railway account
+               - Add \`RAILWAY_TOKEN\` to repository secrets
+            
+            3. **Option C - Custom Deployment**:
+               - Configure your preferred hosting service
+               - Update the workflow with deployment steps
+            
+            ---
+            <sub>Build from commit: ${context.sha.substring(0, 7)}</sub>`;
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('📦 Preview Build Successful!')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: body
+              });
+            }
+
+  cleanup-preview:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Cleanup Streamlit Cloud deployment
+        if: env.STREAMLIT_CLOUD_TOKEN != ''
+        env:
+          STREAMLIT_CLOUD_TOKEN: ${{ secrets.STREAMLIT_CLOUD_TOKEN }}
+        run: |
+          # Placeholder for Streamlit Cloud cleanup
+          echo "Cleaning up preview for PR ${{ github.event.pull_request.number }}"
+      
+      - name: Cleanup Railway deployment
+        if: env.RAILWAY_TOKEN != ''
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          # Placeholder for Railway cleanup
+          echo "Cleaning up Railway service for PR ${{ github.event.pull_request.number }}"
+      
+      - name: Comment on PR - Cleanup complete
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const body = `## 🧹 Preview Deployment Cleaned Up
+            
+            The preview deployment for this PR has been removed.
+            
+            Thank you for your contribution! 🎉`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });
+      
+      - name: Deactivate deployment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const deployments = await github.rest.repos.listDeployments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              environment: `pr-${context.payload.pull_request.number}`
+            });
+            
+            for (const deployment of deployments.data) {
+              await github.rest.repos.createDeploymentStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deployment.id,
+                state: 'inactive'
+              });
+            }

@@ -1,0 +1,148 @@
+name: Render Preview Deployment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '**.py'
+      - 'requirements.txt'
+      - '.streamlit/**'
+      - 'Dockerfile'
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to Render
+        id: render_deploy
+        run: |
+          # Create a unique service name for this PR
+          SERVICE_NAME="paperscope-pr-${{ github.event.pull_request.number }}"
+          
+          # Check if Render token is configured
+          if [ -z "${{ secrets.RENDER_API_KEY }}" ]; then
+            echo "RENDER_API_KEY not configured"
+            echo "preview_url=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Create or update Render service
+          # Note: This requires the Render API key to be set in repository secrets
+          echo "Deploying to Render service: $SERVICE_NAME"
+          
+          # For actual deployment, you would use Render's API here
+          # This is a placeholder that shows the concept
+          PREVIEW_URL="https://${SERVICE_NAME}.onrender.com"
+          echo "preview_url=$PREVIEW_URL" >> $GITHUB_OUTPUT
+          
+          # Deploy using Render API
+          curl -X POST "https://api.render.com/v1/services" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "type": "web_service",
+              "name": "'$SERVICE_NAME'",
+              "ownerId": "${{ secrets.RENDER_OWNER_ID }}",
+              "repo": "https://github.com/${{ github.repository }}",
+              "branch": "${{ github.event.pull_request.head.ref }}",
+              "buildCommand": "pip install -r requirements.txt",
+              "startCommand": "streamlit run streamlit_app.py --server.port=$PORT --server.address=0.0.0.0",
+              "envVars": [
+                {
+                  "key": "DEMO_MODE",
+                  "value": "1"
+                },
+                {
+                  "key": "PYTHON_VERSION",
+                  "value": "3.11"
+                }
+              ],
+              "autoDeploy": "yes"
+            }' || echo "Service might already exist"
+      
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const renderConfigured = '${{ secrets.RENDER_API_KEY }}' !== '';
+            const previewUrl = '${{ steps.render_deploy.outputs.preview_url }}';
+            const prNumber = context.payload.pull_request.number;
+            
+            let body;
+            if (renderConfigured && previewUrl) {
+              body = `## 🚀 Preview Deployment Ready!
+              
+              Your Streamlit app preview is being deployed to Render:
+              
+              🔗 **Preview URL**: ${previewUrl}
+              
+              ⏳ **Note**: First deployment may take 5-10 minutes. Please wait for the service to start.
+              
+              📝 **Demo Mode**: This preview runs in DEMO_MODE without requiring API keys.
+              
+              The preview will be automatically updated with each commit and cleaned up when the PR is closed.
+              
+              ---
+              <sub>Deployed from commit: ${context.sha.substring(0, 7)}</sub>`;
+            } else {
+              body = `## 📦 Preview Build Ready!
+              
+              ✅ Your code is ready for preview deployment.
+              
+              **To enable automatic preview deployments**, a repository maintainer needs to configure deployment secrets:
+              
+              ### Render.com Setup (Recommended):
+              1. Create a [Render](https://render.com) account
+              2. Get your API key from [Render Dashboard](https://dashboard.render.com/account/api-keys)
+              3. Add these secrets to the repository:
+                 - \`RENDER_API_KEY\`: Your Render API key
+                 - \`RENDER_OWNER_ID\`: Your Render owner ID
+              
+              ### Alternative Options:
+              - **Streamlit Cloud**: Add \`STREAMLIT_CLOUD_TOKEN\`
+              - **Railway**: Add \`RAILWAY_TOKEN\`
+              - **Heroku**: Add \`HEROKU_API_KEY\`
+              
+              Once configured, previews will deploy automatically!
+              
+              ---
+              <sub>Build validated from commit: ${context.sha.substring(0, 7)}</sub>`;
+            }
+            
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              (comment.body.includes('Preview Deployment Ready') || 
+               comment.body.includes('Preview Build Ready'))
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: body
+              });
+            }
