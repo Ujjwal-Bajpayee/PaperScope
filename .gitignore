@@ -1,6 +1,15 @@
 # Virtual environment
 .venv/
 
+# Common virtualenv names
+env/
+venv/
+.env
+
+# Ignore environment variable overrides like .env.local, .env.production
+.env.*
+
+
 # Local database and indexes
 db.json
 faiss.index
