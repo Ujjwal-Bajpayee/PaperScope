@@ -4,92 +4,305 @@ from paperscope.main import fetch_and_summarize, query_db
 from paperscope.pdf_parser import extract_text_from_pdf
 from paperscope.vector_store import build_index, search_similar
 
-# Set Streamlit page config
 st.set_page_config(page_title="PaperScope", page_icon="📄", layout="wide")
 
-# Check for demo mode
 DEMO_MODE = os.getenv("DEMO_MODE", "").lower() in ("1", "true", "yes")
 if DEMO_MODE:
     from paperscope.summarizer_demo import summarize
 else:
     from paperscope.summarizer import summarize
 
-# ===== 🎨 Custom Styling =====
 st.markdown("""
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #1c2128;
+            --bg-hover: #21262d;
+            --border: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #7d8590;
+            --accent: #58a6ff;
+            --accent-hover: #1f6feb;
+            --success: #3fb950;
+            --warning: #d29922;
+            --error: #f85149;
+        }
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        .stApp {
+            background-color: var(--bg-primary);
+        }
+        
+        .main {
+            background-color: var(--bg-primary);
+            padding: 2.5rem 3rem;
+        }
+        
+        .header-container {
+            background: linear-gradient(135deg, #1c2128 0%, #21262d 100%);
+            padding: 3rem 2.5rem;
+            border-radius: 16px;
+            margin-bottom: 3rem;
+            border: 1px solid var(--border);
+        }
+        
         .main-title {
-            font-size: 42px;
-            font-weight: 800;
-            margin-bottom: 10px;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.03em;
         }
+        
         .main-subtitle {
-            font-size: 18px;
-            color: #bbbbbb;
-            margin-bottom: 20px;
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+            line-height: 1.6;
         }
-        .section-divider {
-            border: none;
-            height: 1px;
-            background-color: #444;
-            margin: 30px 0;
+        
+        section[data-testid="stSidebar"] {
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border);
         }
-        .stRadio > div {
-            flex-direction: column;
+        
+        section[data-testid="stSidebar"] > div {
+            background-color: var(--bg-secondary);
         }
+        
         .sidebar-title {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 1.25rem;
+            padding: 0 0.5rem;
         }
-        .sidebar-radio label {
-            font-size: 16px !important;
-            padding: 8px 14px;
+        
+        .stRadio > div {
+            gap: 0.5rem;
+            background-color: transparent;
+        }
+        
+        .stRadio > div > label {
+            background-color: var(--bg-tertiary);
+            padding: 1rem 1.25rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .stRadio > div > label:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--accent);
+            transform: translateX(4px);
+        }
+        
+        .section-wrapper {
+            background-color: var(--bg-secondary);
+            padding: 2.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .stTextInput > div > div > input {
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            padding: 0.875rem 1.25rem;
+            font-size: 1rem;
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            transition: all 0.25s ease;
+        }
+        
+        .stTextInput > div > div > input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+            outline: none;
+            background-color: var(--bg-hover);
+        }
+        
+        .stTextInput > div > div > input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+        
+        .stTextInput label {
+            color: var(--text-primary);
+        }
+        
+        .stButton > button {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 10px;
+            padding: 0.875rem 2.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.25s ease;
+            width: 100%;
+        }
+        
+        .stButton > button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(88, 166, 255, 0.3);
+        }
+        
+        .stButton > button:active {
+            transform: translateY(0);
+        }
+        
+        .streamlit-expanderHeader {
+            background-color: var(--bg-tertiary);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font-weight: 500;
+            color: var(--text-primary);
+            padding: 1rem 1.25rem;
+            transition: all 0.25s ease;
+        }
+        
+        .streamlit-expanderHeader:hover {
+            border-color: var(--accent);
+            background-color: var(--bg-hover);
+        }
+        
+        .streamlit-expanderContent {
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            padding: 1.25rem;
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        
+        [data-testid="stFileUploader"] {
+            background-color: var(--bg-tertiary);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            transition: all 0.25s ease;
+        }
+        
+        [data-testid="stFileUploader"]:hover {
+            border-color: var(--accent);
+            background-color: var(--bg-hover);
+        }
+        
+        [data-testid="stFileUploader"] label {
+            color: var(--text-primary);
+        }
+        
+        .stAlert {
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            padding: 1rem 1.25rem;
+            background-color: var(--bg-tertiary);
+        }
+        
+        .caption-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            line-height: 1.5;
+        }
+        
+        .stMarkdown, p, span, div {
+            color: var(--text-primary);
+        }
+        
+        .demo-indicator {
+            background: linear-gradient(135deg, var(--warning) 0%, #c27803 100%);
+            color: var(--bg-primary);
+            padding: 0.625rem 1rem;
             border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin: 1.5rem 0;
+            display: inline-block;
         }
-        .sidebar-radio label:hover {
-            background-color: #333 !important;
-            color: #fff !important;
+        
+        .stSpinner > div {
+            border-color: var(--accent) transparent transparent transparent !important;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-primary);
+        }
+        
+        .stSubheader {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        [data-testid="stCaption"] {
+            color: var(--text-secondary);
         }
     </style>
 """, unsafe_allow_html=True)
 
-# ===== 📚 Sidebar Navigation =====
 with st.sidebar:
-    st.markdown('<div class="sidebar-title">📂 Navigation</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-title">Navigation</div>', unsafe_allow_html=True)
 
     option = st.radio(
-        label="Choose a section",                          # ✔ Accessibility-safe label
+        label="Choose a section",
         options=[
-            "🔍 Search arXiv Papers",
-            "🧠 Query Stored Summaries",
-            "📄 Upload & Summarize PDF",
-            "🔎 Semantic Search (FAISS)"
+            "Search arXiv Papers",
+            "Query Stored Summaries",
+            "Upload & Summarize PDF",
+            "Semantic Search (FAISS)"
         ],
         key="main_menu",
-        label_visibility="collapsed"                      # ✔ Hides the label visually
+        label_visibility="collapsed"
     )
 
     if DEMO_MODE:
-        st.markdown("---")
-        st.markdown("🟠 **Demo Mode Active**")
-        st.caption("Results are approximate.")
+        st.markdown('<div class="demo-indicator">Demo Mode Active</div>', unsafe_allow_html=True)
+        st.caption("Results are approximate")
 
-        if st.button("🎯 Load Demo Dataset"):
+        if st.button("Load Demo Dataset"):
             from paperscope.demo_data import load_demo_data
-            ok,msg = load_demo_data(build_index=False)
-            _= st.success(msg) if ok else st.error("Failed to load Demo DB")
+            ok, msg = load_demo_data(build_index=False)
+            _ = st.success(msg) if ok else st.error("Failed to load demo database")
 
-# ===== 🧠 Main Header & Description =====
-st.markdown('<div class="main-title">📚 PaperScope – Your AI Research Assistant</div>', unsafe_allow_html=True)
-st.markdown('<div class="main-subtitle">Your personal assistant for academic research using LLMs</div>', unsafe_allow_html=True)
-st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+st.markdown("""
+    <div class="header-container">
+        <div class="main-title">PaperScope</div>
+        <div class="main-subtitle">Your personal assistant for academic research using LLMs</div>
+    </div>
+""", unsafe_allow_html=True)
 
-# ===== 🔍 Search arXiv Papers =====
-if option == "🔍 Search arXiv Papers":
-    keyword_input = st.text_input("Enter Keywords or Paper URL", placeholder="e.g., reinforcement learning for robots OR https://arxiv.org/abs/2301.12345")
-    st.caption("💡 You can enter keywords to search arXiv, or paste a direct paper URL (arXiv or PDF link)")
+if option == "Search arXiv Papers":
+    st.markdown('<div class="section-wrapper">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Search arXiv Papers</div>', unsafe_allow_html=True)
+    
+    keyword_input = st.text_input(
+        "Enter Keywords or Paper URL",
+        placeholder="e.g., reinforcement learning for robots OR https://arxiv.org/abs/2301.12345"
+    )
+    st.markdown('<div class="caption-text">You can enter keywords to search arXiv, or paste a direct paper URL (arXiv or PDF link)</div>', unsafe_allow_html=True)
 
-    if st.button("🔎 Fetch & Summarize"):
+    if st.button("Fetch & Summarize"):
         if DEMO_MODE:
             st.info("This feature is disabled in Demo Mode. Use demo dataset or upload a PDF instead.")
         elif keyword_input:
@@ -101,78 +314,98 @@ if option == "🔍 Search arXiv Papers":
                         data = fetch_and_summarize(keyword_input)
                         if data:
                             for item in data[-5:]:
-                                with st.expander(f"📄 {item['title']}"):
+                                with st.expander(f"{item['title']}"):
                                     st.write(item['summary'])
-                            st.success("✅ Paper fetched and summarized successfully!")
+                            st.success("Paper fetched and summarized successfully")
                         else:
-                            st.error("❌ Failed to fetch paper from URL. Please check the URL and try again.")
+                            st.error("Failed to fetch paper from URL. Please check the URL and try again.")
                             st.info("Supported formats: arXiv URLs (abs or pdf) and direct PDF links")
                     except Exception as e:
-                        st.error(f"❌ Error processing URL: {str(e)}")
+                        st.error(f"Error processing URL: {str(e)}")
                         st.info("Supported formats: arXiv URLs (abs or pdf) and direct PDF links")
             else:
                 with st.spinner("Fetching and summarizing..."):
                     data = fetch_and_summarize(keyword_input)
                     if data:
                         for item in data[-5:]:
-                            with st.expander(f"📄 {item['title']}"):
+                            with st.expander(f"{item['title']}"):
                                 st.write(item['summary'])
                     else:
-                        st.warning("No results found.")
+                        st.warning("No results found")
         else:
-            st.warning("Please enter a keyword or URL to search.")
+            st.warning("Please enter a keyword or URL to search")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ===== 🧠 Query Stored Summaries =====
-elif option == "🧠 Query Stored Summaries":
-    query_input = st.text_input("Search stored summaries", placeholder="e.g., contrastive learning")
+elif option == "Query Stored Summaries":
+    st.markdown('<div class="section-wrapper">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Query Stored Summaries</div>', unsafe_allow_html=True)
+    
+    query_input = st.text_input(
+        "Search stored summaries",
+        placeholder="e.g., contrastive learning"
+    )
 
-    if st.button("🔍 Run Keyword Search"):
+    if st.button("Run Keyword Search"):
         if query_input:
             results = query_db(query_input)
             if results:
                 for item in results:
-                    with st.expander(f"📄 {item['title']}"):
+                    with st.expander(f"{item['title']}"):
                         st.write(item['summary'])
             else:
-                st.info("No matching summaries found.")
+                st.info("No matching summaries found")
         else:
-            st.warning("Please enter a query.")
+            st.warning("Please enter a query")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ===== 📄 Upload & Summarize PDF =====
-elif option == "📄 Upload & Summarize PDF":
-    uploaded_file = st.file_uploader("📤 Upload a PDF research paper", type=["pdf"])
+elif option == "Upload & Summarize PDF":
+    st.markdown('<div class="section-wrapper">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Upload & Summarize PDF</div>', unsafe_allow_html=True)
+    
+    uploaded_file = st.file_uploader("Upload a PDF research paper", type=["pdf"])
 
     if uploaded_file:
         with open("temp.pdf", "wb") as f:
             f.write(uploaded_file.read())
 
-        with st.spinner("🧠 Extracting and summarizing..."):
+        with st.spinner("Extracting and summarizing..."):
             text = extract_text_from_pdf("temp.pdf")
             summary = summarize(text)
 
-            st.subheader("📝 Generated Summary")
+            st.subheader("Generated Summary")
             st.success(summary)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ===== 🔎 Semantic Search (FAISS) =====
-elif option == "🔎 Semantic Search (FAISS)":
-    if st.button("🔄 Rebuild Index"):
+elif option == "Semantic Search (FAISS)":
+    st.markdown('<div class="section-wrapper">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Semantic Search (FAISS)</div>', unsafe_allow_html=True)
+    
+    if st.button("Rebuild Index"):
         if DEMO_MODE:
             st.info("Index building is simulated in Demo Mode. Load the demo instead.")
         else:
             with st.spinner("Rebuilding semantic vector index..."):
                 build_index()
-                st.success("Index rebuilt successfully.")
+                st.success("Index rebuilt successfully")
 
-    semantic_query = st.text_input("Enter a semantic query", placeholder="e.g., visual prompt tuning in robotics")
+    semantic_query = st.text_input(
+        "Enter a semantic query",
+        placeholder="e.g., visual prompt tuning in robotics"
+    )
 
-    if st.button("🔍 Search with FAISS"):
+    if st.button("Search with FAISS"):
         if semantic_query:
             results = search_similar(semantic_query)
             if results:
                 for item in results:
-                    with st.expander(f"📄 {item['title']}"):
+                    with st.expander(f"{item['title']}"):
                         st.write(item['summary'])
             else:
-                st.info("No similar summaries found.")
+                st.info("No similar summaries found")
         else:
-            st.warning("Please enter a semantic query.")
+            st.warning("Please enter a semantic query")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
