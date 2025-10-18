@@ -19,20 +19,29 @@ st.markdown("""
         :root {
             --bg-primary: #0d1117;
             --bg-secondary: #161b22;
-            --bg-tertiary: #1c2128;
-            --bg-hover: #21262d;
-            --border: #30363d;
-            --text-primary: #e6edf3;
-            --text-secondary: #7d8590;
-            --accent: #58a6ff;
+            --bg-tertiary: #21262d;
+            --bg-hover: #30363d;
+            --bg-card: #1c2128;
+            --border-primary: #30363d;
+            --border-secondary: #484f58;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --text-tertiary: #6e7681;
+            --accent-primary: #2f81f7;
             --accent-hover: #1f6feb;
+            --accent-active: #388bfd;
             --success: #3fb950;
             --warning: #d29922;
             --error: #f85149;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
         }
         
         * {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
         .stApp {
@@ -41,211 +50,250 @@ st.markdown("""
         
         .main {
             background-color: var(--bg-primary);
-            padding: 3rem 4rem;
+            padding: 2rem 3rem;
             max-width: 1400px;
             margin: 0 auto;
         }
         
         .header-container {
-            background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
-            padding: 4rem 3rem;
-            border-radius: 20px;
-            margin-bottom: 3.5rem;
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            background: transparent;
+            padding: 2.5rem 0 2rem 0;
+            margin-bottom: 2.5rem;
+            position: relative;
         }
         
         .main-title {
-            font-size: 3.5rem;
+            font-size: 3rem;
             font-weight: 800;
-            color: var(--text-primary);
-            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
             letter-spacing: -0.04em;
             line-height: 1.1;
         }
         
         .main-subtitle {
-            font-size: 1.2rem;
+            font-size: 1.125rem;
             color: var(--text-secondary);
             font-weight: 400;
-            line-height: 1.7;
-            max-width: 600px;
+            line-height: 1.6;
+            max-width: 650px;
         }
         
         section[data-testid="stSidebar"] {
-            background-color: var(--bg-secondary);
-            border-right: 1px solid var(--border);
+            background-color: var(--bg-primary);
+            border-right: 1px solid var(--border-primary);
         }
         
         section[data-testid="stSidebar"] > div {
-            background-color: var(--bg-secondary);
-            padding: 2rem 1.5rem;
+            background-color: var(--bg-primary);
+            padding: 2rem 1.25rem;
+        }
+        
+        section[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+            gap: 0;
+        }
+        
+        section[data-testid="stSidebar"] .stRadio {
+            background-color: transparent;
+            padding: 0;
         }
         
         .sidebar-title {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 700;
-            color: var(--text-secondary);
+            color: var(--text-tertiary);
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.08em;
             margin-bottom: 1.5rem;
-            padding: 0 0.5rem;
+            padding: 0;
         }
         
         .stRadio > div {
-            gap: 0.75rem;
+            gap: 0;
             background-color: transparent;
+            display: flex;
+            flex-direction: column;
         }
         
         .stRadio > div > label {
-            background-color: var(--bg-tertiary);
-            padding: 1.1rem 1.5rem;
-            border-radius: 12px;
-            border: 1px solid transparent;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: transparent;
+            padding: 0.875rem 1rem;
+            border-radius: 0;
+            border: none;
+            border-left: 2px solid transparent;
+            transition: all 0.15s ease;
             cursor: pointer;
             font-weight: 500;
-            font-size: 0.95rem;
-            color: var(--text-primary);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            position: relative;
+            text-align: left;
+            margin-bottom: 0.25rem;
         }
         
         .stRadio > div > label:hover {
-            background-color: var(--bg-hover);
-            border-color: var(--accent);
-            transform: translateX(6px);
-            box-shadow: 0 2px 8px rgba(88, 166, 255, 0.15);
+            background-color: rgba(48, 54, 61, 0.4);
+            color: var(--text-primary);
+        }
+        
+        .stRadio > div > label[data-checked="true"] {
+            background-color: rgba(47, 129, 247, 0.1);
+            border-left-color: var(--accent-primary);
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+        
+        .stRadio > div > label[data-checked="true"]:hover {
+            background-color: rgba(47, 129, 247, 0.15);
+        }
+        
+        /* Hide radio button circles */
+        .stRadio > div > label > div:first-child {
+            display: none;
         }
         
         .section-wrapper {
-            background-color: var(--bg-secondary);
-            padding: 3rem;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            margin-bottom: 2.5rem;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            border: none;
+            margin-bottom: 3rem;
+            box-shadow: none;
         }
         
         .section-title {
-            font-size: 2rem;
+            font-size: 1.5rem;
             font-weight: 700;
             color: var(--text-primary);
-            margin-bottom: 2.5rem;
-            padding-bottom: 1.25rem;
-            border-bottom: 2px solid var(--border);
+            margin-bottom: 1.75rem;
+            padding-bottom: 0;
+            border-bottom: none;
             letter-spacing: -0.02em;
         }
         
         .stTextInput > div > div > input {
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            padding: 1rem 1.5rem;
-            font-size: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-primary);
+            padding: 0.875rem 1.25rem;
+            font-size: 0.95rem;
             background-color: var(--bg-tertiary);
             color: var(--text-primary);
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
         
         .stTextInput > div > div > input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.12);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(47, 129, 247, 0.1);
             outline: none;
             background-color: var(--bg-hover);
         }
         
         .stTextInput > div > div > input::placeholder {
-            color: var(--text-secondary);
-            opacity: 0.5;
+            color: var(--text-tertiary);
         }
         
         .stTextInput label {
             color: var(--text-primary);
             font-weight: 500;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             margin-bottom: 0.5rem;
         }
         
         .stButton > button {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+            background: var(--accent-primary);
             color: #ffffff;
             border: none;
-            border-radius: 12px;
-            padding: 1rem 3rem;
+            border-radius: 10px;
+            padding: 0.875rem 2rem;
             font-weight: 600;
-            font-size: 1.05rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.95rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             width: 100%;
-            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.25);
+            box-shadow: var(--shadow-sm);
         }
         
         .stButton > button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(88, 166, 255, 0.35);
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(47, 129, 247, 0.3);
         }
         
         .stButton > button:active {
-            transform: translateY(-1px);
+            transform: translateY(0);
+            box-shadow: var(--shadow-sm);
         }
         
         .streamlit-expanderHeader {
             background-color: var(--bg-tertiary);
-            border-radius: 12px;
-            border: 1px solid var(--border);
+            border-radius: 8px;
+            border: 1px solid var(--border-primary);
             font-weight: 500;
             color: var(--text-primary);
             padding: 1.25rem 1.5rem;
-            transition: all 0.3s ease;
-            font-size: 1rem;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
         }
         
         .streamlit-expanderHeader:hover {
-            border-color: var(--accent);
+            border-color: var(--border-secondary);
             background-color: var(--bg-hover);
-            box-shadow: 0 2px 8px rgba(88, 166, 255, 0.1);
         }
         
         .streamlit-expanderContent {
-            border: 1px solid var(--border);
+            border: 1px solid var(--border-primary);
             border-top: none;
-            border-radius: 0 0 12px 12px;
+            border-radius: 0 0 8px 8px;
             padding: 1.5rem;
             background-color: var(--bg-tertiary);
-            color: var(--text-primary);
-            line-height: 1.7;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            font-size: 0.925rem;
+            margin-top: -0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .streamlit-expander {
+            margin-bottom: 0.75rem;
         }
         
         [data-testid="stFileUploader"] {
             background-color: var(--bg-tertiary);
-            border: 2px dashed var(--border);
-            border-radius: 16px;
-            padding: 4rem 2rem;
-            transition: all 0.3s ease;
+            border: 2px dashed var(--border-primary);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            transition: all 0.2s ease;
             text-align: center;
         }
         
         [data-testid="stFileUploader"]:hover {
-            border-color: var(--accent);
+            border-color: var(--accent-primary);
             background-color: var(--bg-hover);
-            box-shadow: 0 4px 16px rgba(88, 166, 255, 0.1);
         }
         
         [data-testid="stFileUploader"] label {
             color: var(--text-primary);
             font-weight: 500;
+            font-size: 0.95rem;
         }
         
         .stAlert {
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            padding: 1.25rem 1.5rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-primary);
+            padding: 1rem 1.25rem;
             background-color: var(--bg-tertiary);
             margin: 1rem 0;
+            font-size: 0.9rem;
         }
         
         .caption-text {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-top: 0.75rem;
-            line-height: 1.6;
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+            margin-top: 0.5rem;
+            line-height: 1.5;
         }
         
         .stMarkdown, p, span, div {
@@ -253,21 +301,21 @@ st.markdown("""
         }
         
         .demo-indicator {
-            background: linear-gradient(135deg, var(--warning) 0%, #c27803 100%);
+            background: linear-gradient(135deg, var(--warning) 0%, #b87803 100%);
             color: #ffffff;
-            padding: 0.75rem 1.25rem;
-            border-radius: 10px;
-            font-size: 0.85rem;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
             font-weight: 700;
-            margin: 1.5rem 0;
+            margin: 1rem 0;
             display: inline-block;
-            box-shadow: 0 2px 8px rgba(210, 153, 34, 0.3);
+            box-shadow: var(--shadow-sm);
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
         
         .stSpinner > div {
-            border-color: var(--accent) transparent transparent transparent !important;
+            border-color: var(--accent-primary) transparent transparent transparent !important;
         }
         
         h1, h2, h3, h4, h5, h6 {
@@ -277,13 +325,14 @@ st.markdown("""
         .stSubheader {
             color: var(--text-primary);
             font-weight: 600;
-            font-size: 1.5rem;
-            margin-top: 2rem;
+            font-size: 1.35rem;
+            margin-top: 1.5rem;
             margin-bottom: 1rem;
         }
         
         [data-testid="stCaption"] {
-            color: var(--text-secondary);
+            color: var(--text-tertiary);
+            font-size: 0.85rem;
         }
         
         [data-testid="stSpinner"] {
@@ -293,28 +342,51 @@ st.markdown("""
         hr {
             border: none;
             height: 1px;
-            background-color: var(--border);
-            margin: 2rem 0;
+            background-color: var(--border-primary);
+            margin: 1.5rem 0;
         }
         
         .stSuccess {
-            background-color: rgba(63, 185, 80, 0.1);
-            border-left: 4px solid var(--success);
+            background-color: rgba(63, 185, 80, 0.12);
+            border-left: 3px solid var(--success);
+            color: var(--text-primary);
         }
         
         .stError {
-            background-color: rgba(248, 81, 73, 0.1);
-            border-left: 4px solid var(--error);
+            background-color: rgba(248, 81, 73, 0.12);
+            border-left: 3px solid var(--error);
+            color: var(--text-primary);
         }
         
         .stWarning {
-            background-color: rgba(210, 153, 34, 0.1);
-            border-left: 4px solid var(--warning);
+            background-color: rgba(210, 153, 34, 0.12);
+            border-left: 3px solid var(--warning);
+            color: var(--text-primary);
         }
         
         .stInfo {
-            background-color: rgba(88, 166, 255, 0.1);
-            border-left: 4px solid var(--accent);
+            background-color: rgba(47, 129, 247, 0.12);
+            border-left: 3px solid var(--accent-primary);
+            color: var(--text-primary);
+        }
+        
+        /* Improved scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-secondary);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-tertiary);
         }
     </style>
 """, unsafe_allow_html=True)
@@ -359,6 +431,7 @@ if option == "Search arXiv Papers":
         placeholder="e.g., reinforcement learning for robots OR https://arxiv.org/abs/2301.12345"
     )
     st.markdown('<div class="caption-text">You can enter keywords to search arXiv, or paste a direct paper URL (arXiv or PDF link)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="caption-text">                                                                              </div>', unsafe_allow_html=True)
 
     if st.button("Fetch & Summarize"):
         if DEMO_MODE:
