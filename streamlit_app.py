@@ -147,7 +147,8 @@ with st.sidebar:
             "🔍 Search arXiv Papers",
             "🧠 Query Stored Summaries",
             "📄 Upload & Summarize PDF",
-            "🔎 Semantic Search (FAISS)"
+            "🔎 Semantic Search (FAISS)",
+            "📚 History"
         ],
         key="main_menu",
         label_visibility="collapsed"
@@ -370,3 +371,141 @@ elif option == "🔎 Semantic Search (FAISS)":
                 st.info("No similar summaries found.")
         else:
             st.warning("Please enter a semantic query.")
+
+# ========== HISTORY SECTION ==========
+elif option == "📚 History":
+    st.title("📚 Summary History")
+    st.markdown("View and manage your previously summarized papers.")
+    
+    from paperscope.storage import get_history, clear_history, delete_entry
+    from datetime import datetime, timedelta
+    
+    # Load history FIRST
+    history = get_history()
+    
+    # Show statistics if history exists
+    if history:
+        metric_col1, metric_col2, metric_col3 = st.columns(3)
+        
+        with metric_col1:
+            st.metric("Total Papers", len(history))
+        
+        with metric_col2:
+            # Count papers added today
+            today = datetime.now().date()
+            today_count = sum(
+                1 for item in history 
+                if datetime.fromisoformat(item.get("timestamp", "2000-01-01")).date() == today
+            )
+            st.metric("Added Today", today_count)
+        
+        with metric_col3:
+            # Count papers from last 7 days
+            week_ago = datetime.now() - timedelta(days=7)
+            week_count = sum(
+                1 for item in history 
+                if datetime.fromisoformat(item.get("timestamp", "2000-01-01")) > week_ago
+            )
+            st.metric("Last 7 Days", week_count)
+        
+        st.markdown("---")
+    
+    # Add controls in columns
+    col1, col2, col3 = st.columns([2, 1, 1])
+    
+    with col1:
+        search_filter = st.text_input("🔍 Filter by title or keyword", placeholder="Type to filter...")
+    
+    with col2:
+        sort_order = st.selectbox("Sort by", ["Newest First", "Oldest First", "Title A-Z"])
+    
+    with col3:
+        if st.button("🗑️ Clear All History", type="secondary"):
+            if st.session_state.get("confirm_clear", False):
+                clear_history()
+                st.success("History cleared!")
+                st.session_state.confirm_clear = False
+                st.rerun()
+            else:
+                st.session_state.confirm_clear = True
+                st.warning("Click again to confirm")
+    
+    st.markdown("---")
+    
+    if not history:
+        st.info("📭 No papers in history yet. Start by searching or uploading papers!")
+    else:
+        # Apply filters
+        if search_filter:
+            history = [
+                item for item in history 
+                if search_filter.lower() in item.get("title", "").lower() 
+                or search_filter.lower() in item.get("abstract", "").lower()
+            ]
+        
+        # Apply sorting
+        if sort_order == "Oldest First":
+            history = sorted(history, key=lambda x: x.get("timestamp", ""))
+        elif sort_order == "Title A-Z":
+            history = sorted(history, key=lambda x: x.get("title", "").lower())
+        
+        # Display count
+        st.caption(f"Showing {len(history)} paper(s)")
+        
+        # Display history items
+        for idx, item in enumerate(history):
+            with st.expander(f"📄 {item.get('title', 'Untitled Paper')}", expanded=(idx == 0)):
+                # Top row with metadata and action buttons
+                top_col1, top_col2, top_col3 = st.columns([4, 1, 1])
+                
+                with top_col1:
+                    # Show timestamp
+                    timestamp = item.get("timestamp", "Unknown date")
+                    if timestamp != "Unknown date":
+                        try:
+                            dt = datetime.fromisoformat(timestamp)
+                            timestamp = dt.strftime("%B %d, %Y at %I:%M %p")
+                        except:
+                            pass
+                    st.caption(f"📅 Added: {timestamp}")
+                    st.caption(f"🆔 ID: `{item.get('id', 'N/A')}`")
+                
+                with top_col2:
+                    # Add download button for summary
+                    summary_text = f"Title: {item.get('title', 'N/A')}\n\n"
+                    summary_text += f"Abstract:\n{item.get('abstract', 'N/A')}\n\n"
+                    summary_text += f"Summary:\n{item.get('summary', 'N/A')}"
+                    
+                    st.download_button(
+                        label="📥",
+                        data=summary_text,
+                        file_name=f"{item.get('id', 'paper').replace('/', '_')}_summary.txt",
+                        mime="text/plain",
+                        key=f"download_{idx}",
+                        help="Download summary"
+                    )
+                
+                with top_col3:
+                    # Add delete button with bin icon
+                    if st.button("🗑️", key=f"delete_{idx}", help="Delete this paper", type="secondary"):
+                        if delete_entry(item.get('id')):
+                            st.success("Paper deleted!")
+                            st.rerun()
+                        else:
+                            st.error("Failed to delete paper")
+                
+                st.markdown("---")
+                
+                # Display abstract
+                st.markdown("**Abstract:**")
+                st.markdown(f"> {item.get('abstract', 'No abstract available.')}")
+                
+                # Display summary
+                st.markdown("**Summary:**")
+                st.info(item.get('summary', 'No summary available.'))
+                
+                # Add link if it's an arXiv paper
+                paper_id = item.get('id', '')
+                if 'arxiv' in paper_id.lower() or '/' in paper_id:
+                    arxiv_id = paper_id.split('/')[-1] if '/' in paper_id else paper_id
+                    st.markdown(f"🔗 [View on arXiv](https://arxiv.org/abs/{arxiv_id})")
