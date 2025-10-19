@@ -226,18 +226,23 @@ if option == "🔍 Search arXiv Papers":
                         </div>
                     """, unsafe_allow_html=True)
                 
-                data = fetch_and_summarize(keyword_input)
-                
-                # Enhanced: Clear loading animation before showing results
-                loading_placeholder.empty()
-                
-                if data:
-                    st.success(f"✅ Found and summarized {len(data[-5:])} papers!")
-                    for item in data[-5:]:
-                        with st.expander(f"📄 {item['title']}"):
-                            st.write(item['summary'])
-                else:
-                    st.warning("No results found.")
+                try:
+                    data = fetch_and_summarize(keyword_input)
+                    
+                    # Enhanced: Clear loading animation before showing results
+                    loading_placeholder.empty()
+                    
+                    if data:
+                        st.success(f"✅ Found and processed {len(data)} papers successfully!")
+                        for item in data[-5:]:
+                            with st.expander(f"📄 {item['title']}"):
+                                st.write(item['summary'])
+                    else:
+                        st.warning("No results found.")
+                except Exception as e:
+                    loading_placeholder.empty()
+                    st.error(f"❌ Search failed: {str(e)}")
+                    st.info("💡 Try different keywords or check your internet connection.")
         else:
             st.warning("Please enter a keyword or URL to search.")
 
@@ -257,64 +262,86 @@ elif option == "🧠 Query Stored Summaries":
                     </div>
                 """, unsafe_allow_html=True)
             
-            results = query_db(query_input)
-            
-            # Enhanced: Clear loading animation before showing results
-            loading_placeholder.empty()
-            
-            if results:
-                st.success(f"✅ Found {len(results)} matching summaries!")
-                for item in results:
-                    with st.expander(f"📄 {item['title']}"):
-                        st.write(item['summary'])
-            else:
-                st.info("No matching summaries found.")
+            try:
+                results = query_db(query_input)
+                
+                # Enhanced: Clear loading animation before showing results
+                loading_placeholder.empty()
+                
+                if results:
+                    st.success(f"✅ Found {len(results)} matching papers!")
+                    for item in results:
+                        with st.expander(f"📄 {item['title']}"):
+                            st.write(item['summary'])
+                else:
+                    st.info("No matching summaries found. Try different keywords or add more papers to the database.")
+            except Exception as e:
+                loading_placeholder.empty()
+                st.error(f"❌ Search failed: {str(e)}")
         else:
-            st.warning("Please enter a query.")
+            st.warning("Please enter a search query.")
 
 elif option == "📄 Upload & Summarize PDF":
     uploaded_file = st.file_uploader("📤 Upload a PDF research paper", type=["pdf"])
 
     if uploaded_file:
-        with open("temp.pdf", "wb") as f:
-            f.write(uploaded_file.read())
+        try:
+            with open("temp.pdf", "wb") as f:
+                f.write(uploaded_file.read())
 
-        # Enhanced: Two-stage loading animation for PDF extraction and summarization
-        loading_placeholder = st.empty()
-        
-        # Stage 1: PDF extraction
-        with loading_placeholder.container():
-            st.markdown("""
-                <div class="loading-container">
-                    <div class="loading-spinner"></div>
-                    <div class="loading-text">📄 Extracting text from PDF<span class="loading-dots"><span></span><span></span><span></span></span></div>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar"></div>
+            # Enhanced: Two-stage loading animation for PDF extraction and summarization
+            loading_placeholder = st.empty()
+            
+            # Stage 1: PDF extraction
+            with loading_placeholder.container():
+                st.markdown("""
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">📄 Extracting text from PDF<span class="loading-dots"><span></span><span></span><span></span></span></div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar"></div>
+                        </div>
                     </div>
-                </div>
-            """, unsafe_allow_html=True)
-        
-        text = extract_text_from_pdf("temp.pdf")
-        
-        # Stage 2: Summary generation
-        with loading_placeholder.container():
-            st.markdown("""
-                <div class="loading-container">
-                    <div class="loading-spinner"></div>
-                    <div class="loading-text">🧠 Generating AI-powered summary<span class="loading-dots"><span></span><span></span><span></span></span></div>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar"></div>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-        
-        summary = summarize(text)
-        
-        # Enhanced: Clear loading animation before showing summary
-        loading_placeholder.empty()
+                """, unsafe_allow_html=True)
+            
+            try:
+                text = extract_text_from_pdf("temp.pdf")
+                if not text or len(text.strip()) == 0:
+                    loading_placeholder.empty()
+                    st.error("❌ Failed to extract text from PDF. The PDF may be empty, corrupted, or password-protected.")
+                    st.stop()
+                
+                # Stage 2: Summary generation
+                with loading_placeholder.container():
+                    st.markdown("""
+                        <div class="loading-container">
+                            <div class="loading-spinner"></div>
+                            <div class="loading-text">🧠 Generating AI-powered summary<span class="loading-dots"><span></span><span></span><span></span></span></div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar"></div>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                summary = summarize(text)
+                if not summary or len(summary.strip()) == 0:
+                    loading_placeholder.empty()
+                    st.error("❌ Failed to generate summary. Please try again.")
+                    st.stop()
 
-        st.subheader("📝 Generated Summary")
-        st.success(summary)
+                # Enhanced: Clear loading animation before showing summary
+                loading_placeholder.empty()
+
+                st.subheader("📝 Generated Summary")
+                st.success(summary)
+                st.success("✅ PDF processed successfully!")
+            except Exception as e:
+                loading_placeholder.empty()
+                st.error(f"❌ Error processing PDF: {str(e)}")
+                st.info("💡 Make sure the PDF is not password-protected and contains readable text.")
+        except Exception as e:
+            st.error(f"❌ Error uploading file: {str(e)}")
+            st.info("💡 Please try uploading a different PDF file.")
 
 elif option == "🔎 Semantic Search (FAISS)":
     if st.button("🔄 Rebuild Index"):
@@ -335,12 +362,17 @@ elif option == "🔎 Semantic Search (FAISS)":
                     </div>
                 """, unsafe_allow_html=True)
             
-            build_index()
-            
-            # Enhanced: Clear loading animation before showing success message
-            loading_placeholder.empty()
-            
-            st.success("✅ Index rebuilt successfully!")
+            try:
+                build_index()
+                
+                # Enhanced: Clear loading animation before showing success message
+                loading_placeholder.empty()
+                
+                st.success("✅ Index rebuilt successfully!")
+            except Exception as e:
+                loading_placeholder.empty()
+                st.error(f"❌ Failed to rebuild index: {str(e)}")
+                st.info("💡 Make sure you have papers in the database first.")
 
     semantic_query = st.text_input("Enter a semantic query", placeholder="e.g., visual prompt tuning in robotics")
 
@@ -357,18 +389,23 @@ elif option == "🔎 Semantic Search (FAISS)":
                     </div>
                 """, unsafe_allow_html=True)
             
-            results = search_similar(semantic_query)
-            
-            # Enhanced: Clear loading animation before showing results
-            loading_placeholder.empty()
-            
-            if results:
-                st.success(f"✅ Found {len(results)} semantically similar papers!")
-                for item in results:
-                    with st.expander(f"📄 {item['title']}"):
-                        st.write(item['summary'])
-            else:
-                st.info("No similar summaries found.")
+            try:
+                results = search_similar(semantic_query)
+                
+                # Enhanced: Clear loading animation before showing results
+                loading_placeholder.empty()
+                
+                if results:
+                    st.success(f"✅ Found {len(results)} similar papers!")
+                    for item in results:
+                        with st.expander(f"📄 {item['title']}"):
+                            st.write(item['summary'])
+                else:
+                    st.info("No similar summaries found. Try different keywords or rebuild the index.")
+            except Exception as e:
+                loading_placeholder.empty()
+                st.error(f"❌ Semantic search failed: {str(e)}")
+                st.info("💡 Try rebuilding the index first or use different search terms.")
         else:
             st.warning("Please enter a semantic query.")
 
