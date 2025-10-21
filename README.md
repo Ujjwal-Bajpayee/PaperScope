@@ -136,6 +136,18 @@ DEMO_MODE=1 python3 scripts/demo_mode_check.py
 
 This script saves a sample summary, builds the FAISS index (using local embeddings) and runs a semantic search to confirm the flow works offline.
 
+## 💡 Looking for Issues to Work On?
+
+We've compiled a comprehensive list of feature ideas and improvements! Check out:
+
+- **[ISSUE_IDEAS.md](ISSUE_IDEAS.md)** - Detailed list of 40+ categorized issue ideas with implementation guidance
+- **[QUICK_ISSUE_REFERENCE.md](QUICK_ISSUE_REFERENCE.md)** - Prioritized quick reference for top issues and roadmap
+
+These documents help you find issues based on your:
+- Skill level (beginner to advanced)
+- Available time (quick wins to multi-day projects)
+- Areas of interest (UI/UX, AI/ML, integrations, etc.)
+
 ## Community & Code of Conduct
 
 PaperScope is developed in an open and collaborative spirit. Please read and follow the project's Code of Conduct before contributing or participating. The full policy is available in `CODE_OF_CONDUCT.md`.
