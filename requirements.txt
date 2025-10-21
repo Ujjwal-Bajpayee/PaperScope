@@ -5,3 +5,4 @@ PyMuPDF
 faiss-cpu
 requests
 sentence-transformers
+fpdf2
