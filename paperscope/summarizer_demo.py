@@ -7,14 +7,14 @@ DEMO_MODE = os.getenv("DEMO_MODE", "").lower() in ("1", "true", "yes")
 def summarize(text: str) -> str:
     """Simple extractive demo summarizer used only in Demo Mode.
 
-    Returns the first 1-2 sentences prefixed with a demo notice.
+    Returns a fixed, structured demo summary.
     """
-    text = (text or "").strip()
-    if not text:
-        return "(no text provided)"
-    sentences = re.split(r'(?<=[.!?])\s+', text)
-    if len(sentences) >= 2:
-        summary = " ".join(sentences[:2]).strip()
-    else:
-        summary = text[:300].strip()
-    return f"[DEMO MODE] {summary}"
+    return """
+[DEMO MODE]
+
+**Objective:** To demonstrate the new structured summary format.
+**Methodology:** This demo skips AI generation and returns a hard-coded string.
+**Key Findings:** * The new format is much easier to read.
+* Markdown is rendered correctly.
+**Contribution:** This feature improves the app's usability as per issue #18.
+    """
