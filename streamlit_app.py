@@ -251,8 +251,8 @@ st.markdown("""
             padding: 0.875rem 1rem;
             border-radius: 0;
             border: none;
-            border-left: 2px solid transparent;
-            transition: all 0.15s ease;
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
             cursor: pointer;
             font-weight: 500;
             font-size: 0.9rem;
@@ -267,15 +267,21 @@ st.markdown("""
             color: var(--text-primary);
         }
         
-        .stRadio > div > label[data-checked="true"] {
-            background-color: rgba(47, 129, 247, 0.1);
-            border-left-color: var(--accent-primary);
-            color: var(--accent-primary);
+        /* Active state using adjacent sibling selector */
+        .stRadio > div > label:has(input[type="radio"]:checked) {
+            background-color: rgba(47, 129, 247, 0.15);
+            border-left-color: #2f81f7;
+            color: #2f81f7;
             font-weight: 600;
         }
         
-        .stRadio > div > label[data-checked="true"]:hover {
-            background-color: rgba(47, 129, 247, 0.15);
+        .stRadio > div > label:has(input[type="radio"]:checked):hover {
+            background-color: rgba(47, 129, 247, 0.2);
+        }
+        
+        .stRadio > div > label:has(input[type="radio"]:checked) > div:last-child::before {
+            content: "● ";
+            color: #2f81f7;
         }
         
         .stRadio > div > label > div:first-child {
