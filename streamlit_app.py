@@ -548,13 +548,13 @@ st.markdown("""
 with st.sidebar:
     st.markdown('<div class="sidebar-title">Navigation</div>', unsafe_allow_html=True)
     
+    # === MODIFIED: Updated the sidebar options ===
     option = st.radio(
         label="Choose a section",
         options=[
             "Search arXiv Papers",
-            "Query Stored Summaries",
             "Upload & Summarize PDF",
-            "Semantic Search (FAISS)",
+            "Search My Library", # <-- This is the new unified page
             "History"
         ],
         key="main_menu",
@@ -663,7 +663,7 @@ if option == "Search arXiv Papers":
                         else:
                             st.error("Failed to fetch paper from URL. Please check the URL and try again")
                             st.info("Supported formats: arXiv URLs (abs or pdf) and direct PDF links")
-                            
+                        
                 else:
                     with st.spinner("Fetching and summarizing..."):
                         data = fetch_and_summarize(keyword_input)
@@ -718,7 +718,7 @@ if option == "Search arXiv Papers":
                                         )
                         else:
                             st.warning("No results found")
-                            
+                        
             except Exception as e:
                 st.error(f"Error processing: {str(e)}")
                 st.info("Supported formats: arXiv URLs (abs or pdf) and direct PDF links")
@@ -726,75 +726,8 @@ if option == "Search arXiv Papers":
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------
-# Section: Query Stored Summaries
+# === MODIFIED: "Query Stored Summaries" block DELETED ===
 # ---------------------------------------------------------------------
-elif option == "Query Stored Summaries":
-    st.markdown('<div class="section-wrapper">', unsafe_allow_html=True)
-    st.markdown('<div class="section-title">Query Stored Summaries</div>', unsafe_allow_html=True)
-    
-    query_input = st.text_input(
-        "Search stored summaries",
-        placeholder="e.g., contrastive learning"
-    )
-
-    if st.button("Run Keyword Search"):
-        if not query_input or query_input.strip() == "":
-            st.warning("Please enter a search query")
-        else:
-            with st.spinner("Searching database..."):
-                try:
-                    results = query_db(query_input)
-                    
-                    if not results:
-                        st.info("No matching summaries found")
-                    else:
-                        st.success(f"Found {len(results)} results")
-                        for idx, item in enumerate(results):
-                            with st.expander(f"{item.get('title', 'Untitled')}", expanded=(idx == 0)):
-                                st.markdown("**Summary:**")
-                                st.write(item.get('summary', 'No summary available'))
-
-                                # Download buttons
-                                download_col1, download_col2, download_col3 = st.columns([1, 1, 1])
-                                summary_text = item.get('summary', '')
-                                md_bytes = f"# {item.get('title', '')}\n\n{summary_text}".encode("utf-8")
-                                txt_bytes = summary_text.encode("utf-8")
-                                pdf_buf = generate_pdf_from_text(
-                                    title=item.get('title', 'Summary'),
-                                    metadata={"id": item.get('id', '')},
-                                    body_text=summary_text,
-                                    annotations=item.get('annotations', '')
-                                )
-                                
-                                with download_col1:
-                                    st.download_button(
-                                        label="TXT",
-                                        data=txt_bytes,
-                                        file_name=f"{safe_filename(item.get('title', 'summary'))}.txt",
-                                        mime="text/plain",
-                                        key=f"query_txt_{idx}"
-                                    )
-                                with download_col2:
-                                    st.download_button(
-                                        label="MD",
-                                        data=md_bytes,
-                                        file_name=f"{safe_filename(item.get('title', 'summary'))}.md",
-                                        mime="text/markdown",
-                                        key=f"query_md_{idx}"
-                                    )
-                                with download_col3:
-                                    st.download_button(
-                                        label="PDF",
-                                        data=pdf_buf,
-                                        file_name=f"{safe_filename(item.get('title', 'summary'))}.pdf",
-                                        mime="application/pdf",
-                                        key=f"query_pdf_{idx}"
-                                    )
-
-                except Exception as e:
-                    st.error(f"Search failed: {str(e)}")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------
 # Section: Upload & Summarize PDF
@@ -903,85 +836,155 @@ elif option == "Upload & Summarize PDF":
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------
-# Section: Semantic Search (FAISS)
+# === MODIFIED: "Semantic Search (FAISS)" block DELETED ===
 # ---------------------------------------------------------------------
-elif option == "Semantic Search (FAISS)":
-    st.markdown('<div class="section-wrapper">', unsafe_allow_html=True)
-    st.markdown('<div class="section-title">Semantic Search (FAISS)</div>', unsafe_allow_html=True)
-    
-    if st.button("Rebuild Index"):
-        if DEMO_MODE:
-            st.info("Index building is simulated in Demo Mode. Load the demo instead")
-        else:
-            with st.spinner("Rebuilding semantic vector index..."):
-                try:
-                    build_index()
-                    st.success("Index rebuilt successfully")
-                except Exception as e:
-                    st.error(f"Failed to rebuild index: {e}")
 
-    semantic_query = st.text_input(
-        "Enter a semantic query",
-        placeholder="e.g., visual prompt tuning in robotics"
+# ---------------------------------------------------------------------
+# === MODIFIED: New "Search My Library" Page ADDED ===
+# ---------------------------------------------------------------------
+elif option == "Search My Library":
+    st.markdown('<div class="section-wrapper">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Search My Library</div>', unsafe_allow_html=True)
+
+    # --- Logic moved from old "Semantic Search" page ---
+    with st.expander("🗂️ Index Management"):
+        if st.button("Rebuild Index"):
+            if DEMO_MODE:
+                st.info("Index building is simulated in Demo Mode. Load the demo instead")
+            else:
+                with st.spinner("Rebuilding semantic vector index..."):
+                    try:
+                        build_index()
+                        st.success("Index rebuilt successfully")
+                    except Exception as e:
+                        st.error(f"Failed to rebuild index: {e}")
+
+    # --- New Unified Search UI ---
+    search_mode = st.radio(
+        "Select search mode:",
+        ("Keyword", "Semantic"),
+        horizontal=True
+    )
+    
+    query_input = st.text_input(
+        "Enter your search query", 
+        placeholder="e.g., 'contrastive learning' (Keyword) or 'robotics visual tuning' (Semantic)"
     )
 
-    if st.button("Search with FAISS"):
-        if not semantic_query or semantic_query.strip() == "":
-            st.warning("Please enter a semantic query")
+    if st.button("🔍 Search Library"):
+        if not query_input or query_input.strip() == "":
+            st.warning("Please enter a search query")
         else:
-            with st.spinner("Running semantic search..."):
-                try:
-                    results = search_similar(semantic_query)
-                    
-                    if not results:
-                        st.info("No similar results found")
-                    else:
-                        st.success(f"Found {len(results)} similar items")
-                        for idx, item in enumerate(results):
-                            with st.expander(f"{item.get('title', 'Untitled')}", expanded=(idx == 0)):
-                                st.markdown("**Summary:**")
-                                st.write(item.get('summary', 'No summary available'))
+            if search_mode == "Keyword":
+                # --- This is the logic from the old "Query Stored Summaries" page ---
+                with st.spinner("Searching database (Keyword)..."):
+                    try:
+                        results = query_db(query_input)
+                        
+                        if not results:
+                            st.info("No matching summaries found")
+                        else:
+                            st.success(f"Found {len(results)} results")
+                            for idx, item in enumerate(results):
+                                with st.expander(f"{item.get('title', 'Untitled')}", expanded=(idx == 0)):
+                                    st.markdown("**Summary:**")
+                                    st.write(item.get('summary', 'No summary available'))
 
-                                download_col1, download_col2, download_col3 = st.columns([1, 1, 1])
-                                summary_text = item.get('summary', '')
-                                md_bytes = f"# {item.get('title', '')}\n\n{summary_text}".encode("utf-8")
-                                txt_bytes = summary_text.encode("utf-8")
-                                pdf_buf = generate_pdf_from_text(
-                                    title=item.get('title', 'Summary'),
-                                    metadata={"id": item.get('id', '')},
-                                    body_text=summary_text,
-                                    annotations=item.get('annotations', '')
-                                )
-                                
-                                with download_col1:
-                                    st.download_button(
-                                        label="TXT",
-                                        data=txt_bytes,
-                                        file_name=f"{safe_filename(item.get('title', 'summary'))}.txt",
-                                        mime="text/plain",
-                                        key=f"faiss_txt_{idx}"
+                                    # --- Download button logic from old page ---
+                                    download_col1, download_col2, download_col3 = st.columns([1, 1, 1])
+                                    summary_text = item.get('summary', '')
+                                    md_bytes = f"# {item.get('title', '')}\n\n{summary_text}".encode("utf-8")
+                                    txt_bytes = summary_text.encode("utf-8")
+                                    pdf_buf = generate_pdf_from_text(
+                                        title=item.get('title', 'Summary'),
+                                        metadata={"id": item.get('id', '')},
+                                        body_text=summary_text,
+                                        annotations=item.get('annotations', '')
                                     )
-                                with download_col2:
-                                    st.download_button(
-                                        label="MD",
-                                        data=md_bytes,
-                                        file_name=f"{safe_filename(item.get('title', 'summary'))}.md",
-                                        mime="text/markdown",
-                                        key=f"faiss_md_{idx}"
-                                    )
-                                with download_col3:
-                                    st.download_button(
-                                        label="PDF",
-                                        data=pdf_buf,
-                                        file_name=f"{safe_filename(item.get('title', 'summary'))}.pdf",
-                                        mime="application/pdf",
-                                        key=f"faiss_pdf_{idx}"
-                                    )
+                                    
+                                    with download_col1:
+                                        st.download_button(
+                                            label="TXT",
+                                            data=txt_bytes,
+                                            file_name=f"{safe_filename(item.get('title', 'summary'))}.txt",
+                                            mime="text/plain",
+                                            key=f"lib_query_txt_{idx}"
+                                        )
+                                    with download_col2:
+                                        st.download_button(
+                                            label="MD",
+                                            data=md_bytes,
+                                            file_name=f"{safe_filename(item.get('title', 'summary'))}.md",
+                                            mime="text/markdown",
+                                            key=f"lib_query_md_{idx}"
+                                        )
+                                    with download_col3:
+                                        st.download_button(
+                                            label="PDF",
+                                            data=pdf_buf,
+                                            file_name=f"{safe_filename(item.get('title', 'summary'))}.pdf",
+                                            mime="application/pdf",
+                                            key=f"lib_query_pdf_{idx}"
+                                        )
+                    except Exception as e:
+                        st.error(f"Search failed: {str(e)}")
 
-                except Exception as e:
-                    st.error(f"Semantic search failed: {e}")
-    
+            elif search_mode == "Semantic":
+                # --- This is the logic from the old "Semantic Search (FAISS)" page ---
+                with st.spinner("Running semantic search..."):
+                    try:
+                        results = search_similar(query_input)
+                        
+                        if not results:
+                            st.info("No similar results found")
+                        else:
+                            st.success(f"Found {len(results)} similar items")
+                            for idx, item in enumerate(results):
+                                with st.expander(f"{item.get('title', 'Untitled')}", expanded=(idx == 0)):
+                                    st.markdown("**Summary:**")
+                                    st.write(item.get('summary', 'No summary available'))
+
+                                    # --- Download button logic from old page ---
+                                    download_col1, download_col2, download_col3 = st.columns([1, 1, 1])
+                                    summary_text = item.get('summary', '')
+                                    md_bytes = f"# {item.get('title', '')}\n\n{summary_text}".encode("utf-8")
+                                    txt_bytes = summary_text.encode("utf-8")
+                                    pdf_buf = generate_pdf_from_text(
+                                        title=item.get('title', 'Summary'),
+                                        metadata={"id": item.get('id', '')},
+                                        body_text=summary_text,
+                                        annotations=item.get('annotations', '')
+                                    )
+                                    
+                                    with download_col1:
+                                        st.download_button(
+                                            label="TXT",
+                                            data=txt_bytes,
+                                            file_name=f"{safe_filename(item.get('title', 'summary'))}.txt",
+                                            mime="text/plain",
+                                            key=f"lib_faiss_txt_{idx}"
+                                        )
+                                    with download_col2:
+                                        st.download_button(
+                                            label="MD",
+                                            data=md_bytes,
+                                            file_name=f"{safe_filename(item.get('title', 'summary'))}.md",
+                                            mime="text/markdown",
+                                            key=f"lib_faiss_md_{idx}"
+                                        )
+                                    with download_col3:
+                                        st.download_button(
+                                            label="PDF",
+                                            data=pdf_buf,
+                                            file_name=f"{safe_filename(item.get('title', 'summary'))}.pdf",
+                                            mime="application/pdf",
+                                            key=f"lib_faiss_pdf_{idx}"
+                                        )
+                    except Exception as e:
+                        st.error(f"Semantic search failed: {e}")
+
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 # ---------------------------------------------------------------------
 # Section: History
