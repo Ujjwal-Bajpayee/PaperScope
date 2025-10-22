@@ -1,0 +1,10 @@
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+# Match your source dirs
+src = ["paperscope", "scripts"]
+extend-exclude = ["faiss.index", "db.json", ".streamlit"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]

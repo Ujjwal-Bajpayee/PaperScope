@@ -6,3 +6,6 @@ faiss-cpu
 requests
 sentence-transformers
 fpdf2
+ruff
+pytest
+pytest-cov
