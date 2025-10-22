@@ -51,6 +51,11 @@ def safe_filename(filename: str) -> str:
     filename = re.sub(r"[^\w\-_.]", "_", filename)
     return filename[:200]
 
+def truncate_text(text: str, max_length: int = 100) -> str:
+    """Truncate text to max_length characters, adding ellipsis if needed."""
+    if not text or len(text) <= max_length:
+        return text or ""
+    return text[:max_length - 3] + "..."
 
 def generate_pdf_from_text(title: str, metadata: dict, body_text: str, annotations: str = ""):
     """Generate a Unicode-safe PDF summary report using fpdf2."""
@@ -59,12 +64,12 @@ def generate_pdf_from_text(title: str, metadata: dict, body_text: str, annotatio
 
     font_path = os.path.join(os.path.dirname(__file__), "paperscope", "DejaVuSans.ttf")
     if os.path.exists(font_path):
-        pdf.add_font("DejaVu", "", font_path, uni=True)
+        pdf.add_font("DejaVu", "", font_path)
         pdf.set_font("DejaVu", "", 16)
     else:
         pdf.set_font("Helvetica", "", 16)
 
-    pdf.cell(0, 10, txt=title[:100], ln=True, align="C")
+    pdf.cell(0, 10, text=title[:100], new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.ln(10)
 
     if os.path.exists(font_path):
@@ -74,7 +79,8 @@ def generate_pdf_from_text(title: str, metadata: dict, body_text: str, annotatio
     
     if metadata:
         for key, value in metadata.items():
-            pdf.multi_cell(0, 8, f"{key}: {str(value)[:100]}")
+            value_str = truncate_text(str(value), max_length=150) 
+            pdf.multi_cell(0, 8, f"{key}: {value_str}", new_x="LMARGIN", new_y="NEXT")
         pdf.ln(6)
 
     pdf.multi_cell(0, 8, body_text)
@@ -85,7 +91,7 @@ def generate_pdf_from_text(title: str, metadata: dict, body_text: str, annotatio
             pdf.set_font("DejaVu", "B", 13)
         else:
             pdf.set_font("Helvetica", "B", 13)
-        pdf.cell(0, 10, "Annotations:", ln=True)
+        pdf.cell(0, 10, text="Annotations:", new_x="LMARGIN", new_y="NEXT")
         if os.path.exists(font_path):
             pdf.set_font("DejaVu", "", 12)
         else:
@@ -93,11 +99,11 @@ def generate_pdf_from_text(title: str, metadata: dict, body_text: str, annotatio
         pdf.multi_cell(0, 8, annotations)
 
     try:
-        pdf_bytes = pdf.output(dest="S")
+        pdf_bytes = pdf.output()
         if isinstance(pdf_bytes, str):
             pdf_bytes = pdf_bytes.encode("latin-1")
     except Exception:
-        pdf_bytes = pdf.output(dest="S").encode("utf-8")
+        pdf_bytes = pdf.output().encode("utf-8")
 
     buffer = io.BytesIO(pdf_bytes)
     buffer.seek(0)
